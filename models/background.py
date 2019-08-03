@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+from imagenet.utils.visualization import draw_box, draw_caption
 
 class BackgroundDetection:
     def __init__(self, history = 10000, nmixtures=4, backgroundRatio=0.0001, hide=True, **kwargs):
@@ -29,12 +30,14 @@ class BackgroundDetection:
                 self.min = mn
                 self.active = frame.copy()
         self.last = frame.copy()
-        countours, _ = cv.findContours(self.logic, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
-        for countour in countours:
+        countours, check = cv.findContours(self.logic, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
+        for i, countour in enumerate(countours):
             if 100 <= cv.contourArea(countour):
                 x, y, w, h = cv.boundingRect(countour)
                 #cv.drawContours(frame, [countour], -1, (255, 0, 0), 3)
-                cv.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 4)
+                #cv.rectangle(player.orginal, (x, y), (x + w, y + h), (0, 255, 0), 4)
+                draw_box(player.orginal, (x, y, x + w, y + h), (0, 255, 0), 4)
+                draw_caption(player.orginal, (x, y, x + w, y + h), str(check[0, i, 3]))
 
         if self.hide == False:
             player.windows['Background'] = self.logic

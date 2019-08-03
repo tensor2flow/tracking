@@ -3,6 +3,7 @@ import cv2 as cv
 class VideoPlayer:
     def __init__(self, name, path):
         self.name = name
+        self.orginal = None
         self.video = cv.VideoCapture(path)
         self.models = []
         self.windows = {}
@@ -25,11 +26,12 @@ class VideoPlayer:
             if self.stopped:
                 break
             check, frame = self.video.read()
+            self.orginal = frame.copy()
             if frame is None:
                 break
             for model in self.models:
                 model.run(self, frame)
-            cv.imshow(self.name, frame)
+            cv.imshow(self.name, self.orginal)
             for name in self.windows:
                 cv.imshow(name, self.windows[name])
             key = cv.waitKey(1)
