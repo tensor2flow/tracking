@@ -3,7 +3,8 @@ import numpy as np
 from imagenet.utils.visualization import draw_box, draw_caption
 
 class BackgroundDetection:
-    def __init__(self, history = 10000, nmixtures=4, backgroundRatio=0.0001, hide=True, **kwargs):
+    def __init__(self, a, b, history = 10000, nmixtures=4, backgroundRatio=0.0001, hide=True, **kwargs):
+        self.a, self.b = a, b
         self.active = None
         self.last = None
         self.min = None
@@ -20,7 +21,7 @@ class BackgroundDetection:
 
     def run(self, player, frame):
         self.logic = self.model.apply(frame)
-        
+        cv.line(player.orginal, self.a, self.b, (255, 0, 0), 5)
         if self.min is None:
             self.min = self.logic.shape[0] * self.logic.shape[1]
             self.active = frame.copy()
@@ -37,8 +38,10 @@ class BackgroundDetection:
                 #cv.drawContours(frame, [countour], -1, (255, 0, 0), 3)
                 #cv.rectangle(player.orginal, (x, y), (x + w, y + h), (0, 255, 0), 4)
                 if check[0, i, 3] == -1:
-                    draw_box(player.orginal, (x, y, x + w, y + h), (0, 255, 0), 4)
-                    draw_caption(player.orginal, (x, y, x + w, y + h), 'Head')
+                    draw_box(player.orginal, (x, y, x + w, y + h), (0, 255, 0), 2)
+                    isin = y + h > self.a[1]
+                    caption = '{}'.format('IN' if isin else 'OUT')
+                    draw_caption(player.orginal, (x, y, x + w, y + h), caption)
 
         if self.hide == False:
             player.windows['Background'] = self.logic
