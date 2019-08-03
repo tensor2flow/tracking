@@ -1,6 +1,5 @@
 import cv2 as cv
 import numpy as np
-from sklearn.cluster import KMeans
 
 class BackgroundDetection:
     def __init__(self, history = 10000, nmixtures=4, backgroundRatio=0.0001, hide=True, **kwargs):
