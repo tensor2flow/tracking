@@ -4,27 +4,34 @@ class VideoPlayer:
     def __init__(self, name, path):
         self.name = name
         self.video = cv.VideoCapture(path)
-        self.listeners = []
-        self.stop = False
-        def quit(player, frame):
-            player.stop = True
+        self.models = []
+        self.windows = {}
+        self.stopped = False
         self.events = [
-            ( 'q', quit )
+            ( 'q', lambda player, frame: player.stop() )
         ]
 
-    def register(self, listener):
-        self.listeners.append(listener)
+    def stop(self):
+        self.stopped = True
+
+    def use(self, model):
+        self.models.append(model)
+    
+    def register(self, event):
+        self.events.append(event)
 
     def play(self):
         while True:
-            if self.stop:
+            if self.stopped:
                 break
             check, frame = self.video.read()
             if frame is None:
                 break
-            for listener in self.listeners:
-                listener.run(self, frame)
+            for model in self.models:
+                model.run(self, frame)
             cv.imshow(self.name, frame)
+            for name in self.windows:
+                cv.imshow(name, self.windows[name])
             key = cv.waitKey(1)
             for code, action in self.events:
                 if key == ord(code):
