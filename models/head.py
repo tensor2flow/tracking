@@ -15,11 +15,12 @@ class HeadDetection:
         self.hide = hide
         self.train_model = models.load_model(path, backbone_name=baskbone)
         self.prediction_model = retinanet_bbox(self.train_model, anchor_params=None)
-    
     def predict(self, image, **kwargs):
         image = preprocess_image(image.copy())
         image, scale = resize_image(image, 500, 800, **kwargs)
+        cv.imshow('Example', image)
         boxes, scores, _ = self.prediction_model.predict_on_batch(np.expand_dims(image, axis=0))
+        #boxes, scores, _ = self.prediction_model.predict_on_batch(image)
         boxes /= scale
         results = []
         for box, score in zip(boxes[0], scores[0]):
@@ -29,17 +30,20 @@ class HeadDetection:
         return np.array(results)
 
     def run(self, player, frame):
-        start = time()
-        boxes = self.predict(player.orginal)
-        print('performance : {}'.format(time() - start))
-        cv.rectangle(player.orginal, self.a, self.b, (255, 0, 0), 5)
+        cv.rectangle(player.orginal, self.a, self.b, (255, 0, 0), 1)
         if self.hide == False:
+            isprocessing = False
             if player.boxes is not None:
                 for box in player.boxes:
                     x1, y1, x2, y2 = box
-                    draw_box(player.orginal, (x1, y1, x2, y2), (0, 255, 0), 2)
-                    isin = y2 > self.a[1]
-                    caption = '{}'.format('IN' if isin else 'OUT')
-                    draw_caption(player.orginal, (x1, y1, x2, y2), caption)
-            player.windows['Frame'] = frame
-            
+                    if self.a[0] < x1 < self.b[0] and self.a[0] < x2 < self.b[0] and self.a[1] > y1 and y2 > self.b[1]:
+                        isprocessing = True
+            if isprocessing:
+                #draw_box(player.orginal, (x1, y1, x2, y2), color, 1)
+                #draw_caption(player.orginal, (x1, y1, x2, y2), caption)
+                start = time()
+                boxes = self.predict(player.orginal)
+                print(boxes)
+                for box in boxes:
+                    print(box)
+                print('performance : {}'.format(time() - start))

@@ -29,9 +29,9 @@ class VideoPlayer:
             if self.stopped:
                 break
             check, frame = self.video.read()
-            self.orginal = frame.copy()
             if frame is None:
                 break
+            self.orginal = frame.copy()
             for model in self.models:
                 model.run(self, frame)
             cv.imshow(self.name, self.orginal)
