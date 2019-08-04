@@ -13,8 +13,8 @@ class HeadDetection:
         self.ispredict = predict
         self.a, self.b = a, b
         self.hide = hide
-        self.train_model = models.load_model(path, backbone_name=baskbone)
-        self.prediction_model = retinanet_bbox(self.train_model, anchor_params=None)
+        self.prediction_model = models.load_model(path, backbone_name=baskbone)
+        #self.prediction_model = retinanet_bbox(self.train_model, anchor_params=None)
     def predict(self, image, **kwargs):
         image = preprocess_image(image.copy())
         image, scale = resize_image(image)

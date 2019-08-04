@@ -40,8 +40,9 @@ class VideoPlayer:
             #frame = frame[0:frame.shape[0], self.clipped_size[0]:self.clipped_size[1]]
             self.orginal = frame.copy()
             width = frame.shape[1]
-            frame = imutils.resize(frame, width=900)
-            self.scale = width / 900
+            nwidth=1100
+            frame = imutils.resize(frame, width=nwidth)
+            self.scale = width / nwidth
             for model in self.models:
                 model.run(self, frame)
             cv.imshow(self.name, self.orginal)
