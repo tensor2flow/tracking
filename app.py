@@ -1,14 +1,17 @@
 from models import (
     BackgroundDetection,
     MotionDetection,
-    HeadDetection
+    HeadDetection,
+    Tracker
 )
 from player import VideoPlayer
 
 if __name__ == '__main__': 
-    player = VideoPlayer('Window', 'video/001.mp4')
-    player.use(MotionDetection(hide=True, path='bg.jpg'))
-    player.use(BackgroundDetection(hide=True))
-    player.use(HeadDetection((180, 200), (580, 250), 'snapshots/resnet50.h5', hide=False))
-    # player.register(('b', lambda player, frame: background.save('bg.jpg')))
+    player = VideoPlayer('Window', 'video/001.mp4', (600, 1700))
+    background = BackgroundDetection(hide=True)
+    player.use(MotionDetection(hide=True))
+    player.use(background)
+    player.use(HeadDetection((0, 700), (1100, 800), 'snapshots/resnet50.h5', hide=False, predict=True))
+    player.use(Tracker())
+    player.register(('b', lambda player, frame: background.save('test.jpg')))
     player.play()

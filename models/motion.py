@@ -17,9 +17,7 @@ class MotionDetection:
             countours, _ = cv.findContours(foreground, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
             for countour in countours:
                 if 100 <= cv.contourArea(countour):
-                    x, y, w, h = cv.boundingRect(countour)
                     cv.drawContours(frame, [countour], -1, (255, 255, 255), 30)
-                    #cv.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
 
             if self.hide == False:
                 player.windows['Motion'] = foreground
