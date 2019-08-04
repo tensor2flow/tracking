@@ -3,8 +3,7 @@ import numpy as np
 from imagenet.utils.visualization import draw_box, draw_caption
 
 class BackgroundDetection:
-    def __init__(self, a, b, history = 10000, nmixtures=4, backgroundRatio=0.0001, hide=True, **kwargs):
-        self.a, self.b = a, b
+    def __init__(self, history = 10000, nmixtures=4, backgroundRatio=0.0001, hide=True, **kwargs):
         self.active = None
         self.last = None
         self.min = None
@@ -20,8 +19,9 @@ class BackgroundDetection:
         cv.imwrite(path, self.last)
 
     def run(self, player, frame):
+        self.last = frame.copy()
         self.logic = self.model.apply(frame)
-        cv.line(player.orginal, self.a, self.b, (255, 0, 0), 5)
+        
         if self.min is None:
             self.min = self.logic.shape[0] * self.logic.shape[1]
             self.active = frame.copy()
@@ -30,18 +30,18 @@ class BackgroundDetection:
             if self.min > mn:
                 self.min = mn
                 self.active = frame.copy()
-        self.last = frame.copy()
         countours, check = cv.findContours(self.logic, cv.RETR_CCOMP, cv.CHAIN_APPROX_NONE)
+        player.boxes = None
         for i, countour in enumerate(countours):
-            if 100 <= cv.contourArea(countour):
+            if 1000 <= cv.contourArea(countour):
                 x, y, w, h = cv.boundingRect(countour)
                 #cv.drawContours(frame, [countour], -1, (255, 0, 0), 3)
                 #cv.rectangle(player.orginal, (x, y), (x + w, y + h), (0, 255, 0), 4)
                 if check[0, i, 3] == -1:
-                    draw_box(player.orginal, (x, y, x + w, y + h), (0, 255, 0), 2)
-                    isin = y + h > self.a[1]
-                    caption = '{}'.format('IN' if isin else 'OUT')
-                    draw_caption(player.orginal, (x, y, x + w, y + h), caption)
-
+                    box = np.array([[x, y, x + w, y + h]])
+                    if player.boxes is None:
+                        player.boxes = box
+                    else:
+                        player.boxes = np.append(player.boxes, box, axis=0)
         if self.hide == False:
             player.windows['Background'] = self.logic

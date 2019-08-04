@@ -1,4 +1,5 @@
 import cv2 as cv
+import numpy as np
 
 class VideoPlayer:
     def __init__(self, name, path):
@@ -7,7 +8,9 @@ class VideoPlayer:
         self.video = cv.VideoCapture(path)
         self.models = []
         self.windows = {}
+        self.frame = None
         self.stopped = False
+        self.boxes = None
         self.events = [
             ( 'q', lambda player, frame: player.stop() )
         ]
