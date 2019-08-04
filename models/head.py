@@ -17,7 +17,7 @@ class HeadDetection:
         self.prediction_model = retinanet_bbox(self.train_model, anchor_params=None)
     def predict(self, image, **kwargs):
         image = preprocess_image(image.copy())
-        image, scale = resize_image(image, 500, 800)
+        image, scale = resize_image(image)
         boxes, scores, _ = self.prediction_model.predict_on_batch(np.expand_dims(image, axis=0))
         #boxes, scores, _ = self.prediction_model.predict_on_batch(image)
         boxes /= scale

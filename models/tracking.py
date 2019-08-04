@@ -6,7 +6,7 @@ from collections import OrderedDict
 import numpy as np
 
 class CentroidTracker():
-	def __init__(self, maxDisappeared=2):
+	def __init__(self, maxDisappeared=50):
 		self.nextObjectID = 0
 		self.objects = OrderedDict()
 		self.disappeared = OrderedDict()
@@ -90,17 +90,26 @@ class CentroidTracker():
 class Tracker:
     def __init__(self):
         self.trackers = {}
-        self.lastID = 1
         self.ct = CentroidTracker()
     
     def run(self, player, _):
+        status = -1
         if player.predictions is not None:
-            self.trackers = {}
+            
+            rects = []
             for box in player.predictions:
+                status = 0
                 box = np.int0(box)
-                self.trackers[self.lastID] = cv.TrackerCSRT_create()
-                self.trackers[self.lastID].init(player.orginal, (box[0], box[1], box[2] - box[0], box[3] - box[1]))
-                
+                rects.append((box[0], box[1], box[2] - box[0], box[3] - box[1]))
+                self.ct.update(rects)
+        if status == 0:
+            for uuid in self.ct.news.keys():
+                self.trackers[uuid] = cv.TrackerCSRT_create()
+                self.trackers[uuid].init(player.orginal, self.ct.news[uuid])
+            for uuid in self.ct.removes.keys():
+                if uuid in self.trackers.keys():
+                    del self.trackers[uuid]
+    
         for objectId in self.trackers:
             success, box = self.trackers[objectId].update(player.orginal)
             if success:

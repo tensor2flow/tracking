@@ -11,7 +11,7 @@ if __name__ == '__main__':
     background = BackgroundDetection(hide=True)
     player.use(MotionDetection(hide=True))
     player.use(background)
-    player.use(HeadDetection((0, 700), (1100, 800), 'snapshots/resnet50.h5', hide=False, predict=True))
+    player.use(HeadDetection((600, 700), (1700, 800), 'snapshots/resnet50_v2.h5', hide=False, predict=True))
     player.use(Tracker())
     player.register(('b', lambda player, frame: background.save('test.jpg')))
     player.play()

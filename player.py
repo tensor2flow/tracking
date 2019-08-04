@@ -34,14 +34,10 @@ class VideoPlayer:
             if self.stopped:
                 break
             check, frame = self.video.read()
-            self.video.read()
-            self.video.read()
-            self.video.read()
-            self.video.read()
             if frame is None:
                 break
             start = time()
-            frame = frame[0:frame.shape[0], self.clipped_size[0]:self.clipped_size[1]]
+            #frame = frame[0:frame.shape[0], self.clipped_size[0]:self.clipped_size[1]]
             self.orginal = frame.copy()
             width = frame.shape[1]
             frame = imutils.resize(frame, width=900)
