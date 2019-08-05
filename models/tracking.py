@@ -27,7 +27,7 @@ class CentroidTracker():
 		self.news = {}; self.removes = {}
 		if len(rects) == 0:
 			disappeared = self.disappeared.copy()
-			for objectID in self.disappeared.keys():
+			for objectID in disappeared.keys():
 				self.deregister(objectID)
 				
 			return self.objects
