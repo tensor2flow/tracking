@@ -1,42 +1,35 @@
 import cv2 as cv
 import numpy as np
-
+from time import time
 from scipy.spatial import distance as dist
 from collections import OrderedDict
-import numpy as np
 
 class CentroidTracker():
-	def __init__(self, maxDisappeared=50):
+	def __init__(self):
 		self.nextObjectID = 0
 		self.objects = OrderedDict()
 		self.disappeared = OrderedDict()
-		self.news = {}
+		self.news, self.all = {}, {}
 		self.removes = {}
-
-		self.maxDisappeared = maxDisappeared
 
 	def register(self, centroid, rect):
 		self.objects[self.nextObjectID] = centroid
 		self.disappeared[self.nextObjectID] = 0
-		self.news[self.nextObjectID] = rect
+		self.news[self.nextObjectID] = rect; self.all[self.nextObjectID] = rect
 		self.nextObjectID += 1
 
 	def deregister(self, objectID):
-		self.removes[objectID] = True
+		self.removes[objectID] = True; del self.all[objectID]
 		del self.objects[objectID]
 		del self.disappeared[objectID]
 
 	def update(self, rects):
-		self.news = {}
+		self.news = {}; self.removes = {}
 		if len(rects) == 0:
 			disappeared = self.disappeared.copy()
 			for objectID in self.disappeared.keys():
-				disappeared[objectID] += 1
-
-			for objectID in disappeared.keys():
-				if disappeared[objectID] > self.maxDisappeared:
-					self.deregister(objectID)
-
+				self.deregister(objectID)
+				
 			return self.objects
 
 		inputCentroids = np.zeros((len(rects), 2), dtype="int")
@@ -72,14 +65,11 @@ class CentroidTracker():
 
 			unusedRows = set(range(0, D.shape[0])).difference(usedRows)
 			unusedCols = set(range(0, D.shape[1])).difference(usedCols)
-
+            
 			if D.shape[0] >= D.shape[1]:
 				for row in unusedRows:
 					objectID = objectIDs[row]
-					self.disappeared[objectID] += 1
-
-					if self.disappeared[objectID] > self.maxDisappeared:
-						self.deregister(objectID)
+					self.deregister(objectID)
 
 			else:
 				for col in unusedCols:
@@ -91,28 +81,73 @@ class Tracker:
     def __init__(self):
         self.trackers = {}
         self.ct = CentroidTracker()
-    
+        self.results = {}
+        self.lastID = 1
+        self._in = 0
+        self._out = 0
+
     def run(self, player, _):
-        status = -1
+        rects = []
         if player.predictions is not None:
-            
-            rects = []
+            self.trackers = {}
             for box in player.predictions:
-                status = 0
+                self.trackers[self.lastID] = cv.TrackerCSRT_create()
+                self.trackers[self.lastID].init(player.orginal, (box[0], box[1], box[2] - box[0], box[3] - box[1]))
+                self.lastID += 1
+            for box in player.predictions:
+                rects.append((box[0], box[1], box[2], box[3]))
+                cv.rectangle(player.orginal, (box[0], box[1], box[2] - box[0], box[3] - box[1]), (0, 255, 0), 2)
+        else:
+            for uuid in self.trackers.keys():
+                success, box = self.trackers[uuid].update(player.orginal)
                 box = np.int0(box)
-                rects.append((box[0], box[1], box[2] - box[0], box[3] - box[1]))
-                self.ct.update(rects)
-        if status == 0:
-            for uuid in self.ct.news.keys():
-                self.trackers[uuid] = cv.TrackerCSRT_create()
-                self.trackers[uuid].init(player.orginal, self.ct.news[uuid])
-            for uuid in self.ct.removes.keys():
-                if uuid in self.trackers.keys():
-                    del self.trackers[uuid]
-    
-        for objectId in self.trackers:
-            success, box = self.trackers[objectId].update(player.orginal)
-            if success:
-                (x, y, w, h) = np.int0(box)
-                cv.rectangle(player.orginal, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                if success:
+                    cv.rectangle(player.orginal, (box[0], box[1], box[2], box[3]), (255, 0, 0), 2)
+                    rects.append((box[0], box[1], box[2] + box[0], box[3] + box[1]))
+        self.ct.update(rects)
+        self._in = 0
+        self._out = 0
+        for uuid in self.ct.objects.keys():
+            point = self.ct.objects[uuid]
+            if uuid not in self.results.keys():
+                _type = -1
+                if point[1] < player.a[1]:
+                    _type = -1
+                else:
+                    _type = 1
+                self.results[uuid] = {
+                    'type': _type,
+                    'min': point[1],
+                    'max': point[1]
+                }
+            else:
+                if self.results[uuid]['min'] > point[1]:
+                    self.results[uuid]['min'] = point[1]
+                if self.results[uuid]['max'] < point[1]:
+                    self.results[uuid]['max'] = point[1]
+                if self.results[uuid]['min'] + 100 <= self.results[uuid]['max'] and self.results[uuid]['min'] < player.a[1] and self.results[uuid]['max'] > player.a[1]:
+                    mn = abs(self.results[uuid]['min'] - point[1])
+                    mx = abs(self.results[uuid]['max'] - point[1])
+                    if mn < mx:
+                        self.results[uuid]['type'] = -1
+                    else:
+                        self.results[uuid]['type'] = 1
+            _type = 'OUT' if self.results[uuid]['type'] == -1 else 'IN'
+            cv.putText(
+                player.orginal, 
+                'ID: {}, {}'.format(uuid, _type), 
+                (point[0], point[1]), 
+                cv.FONT_HERSHEY_SIMPLEX, 
+                0.5, 
+                (0, 255, 0), 
+                2
+            )
+            if self.results[uuid]['type'] == -1:
+                self._out += 1
+            else:
+                self._in += 1
+            cv.circle(player.orginal, (point[0], point[1]), 4, (0, 255, 0), -1)
+        cv.rectangle(player.orginal, player.area, (0, 255, 0),2)
+        cv.putText(player.orginal, 'IN : {}'.format(self._in), (100, 100), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        cv.putText(player.orginal, 'OUT : {}'.format(self._out), (100, 130), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         player.predictions = None

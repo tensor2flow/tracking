@@ -4,7 +4,9 @@ import imutils
 from time import time
 
 class VideoPlayer:
-    def __init__(self, name, path, clipped_size):
+    def __init__(self, name, path, clipped_size, a, b, area):
+        self.area = area
+        self.a, self.b = a, b
         self.clipped_size = clipped_size
         self.name = name
         self.orginal = None
@@ -19,6 +21,7 @@ class VideoPlayer:
         self.events = [
             ( 'q', lambda player, frame: player.stop() )
         ]
+        self.i = 0
 
     def stop(self):
         self.stopped = True
@@ -37,12 +40,11 @@ class VideoPlayer:
             if frame is None:
                 break
             start = time()
-            #frame = frame[0:frame.shape[0], self.clipped_size[0]:self.clipped_size[1]]
+            frame = frame[0:frame.shape[0], self.clipped_size[0]:self.clipped_size[1]]
             self.orginal = frame.copy()
             width = frame.shape[1]
-            nwidth=1100
-            frame = imutils.resize(frame, width=nwidth)
-            self.scale = width / nwidth
+            frame = imutils.resize(frame, width=700)
+            self.scale = width / 700
             for model in self.models:
                 model.run(self, frame)
             cv.imshow(self.name, self.orginal)
@@ -53,5 +55,6 @@ class VideoPlayer:
                 if key == ord(code):
                     action(self, frame)
             print('performance : {}'.format(time() - start))
+            self.i += 1
         cv.destroyAllWindows()
         self.video.release()
