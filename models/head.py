@@ -29,7 +29,7 @@ class HeadDetection:
         return np.array(results)
 
     def run(self, player, frame):
-        if self.hide == False and player.i % 10 == 0:
+        if player.i % 10 == 0:
             isprocessing = False
             if player.boxes is not None:
                 for box in player.boxes:
@@ -37,9 +37,10 @@ class HeadDetection:
                     x1, y1, x2, y2 = player.scale * x1, player.scale * y1, player.scale * x2, player.scale * y2
                     if player.a[0] < x1 < player.b[0] and player.a[0] < x2 < player.b[0] and player.a[1] > y1 and y2 > player.b[1]:
                         isprocessing = True
-            if isprocessing and self.ispredict:
+            if isprocessing and self.ispredict or self.ispredict and player.last_predicted + 30 < player.i:
                 start = time()
                 boxes = self.predict(player.orginal)
+                player.last_predicted = player.i
                 #print('performance:', time() - start)
                 player.predictions = boxes
         cv.rectangle(player.orginal, player.a, player.b, (255, 0, 0), 1)

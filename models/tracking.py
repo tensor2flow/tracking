@@ -105,34 +105,40 @@ class Tracker:
                     cv.rectangle(player.orginal, (box[0], box[1], box[2], box[3]), (255, 0, 0), 2)
                     rects.append((box[0], box[1], box[2] + box[0], box[3] + box[1]))
         self.ct.update(rects)
-        self._in = 0
-        self._out = 0
         for uuid in self.ct.objects.keys():
             point = self.ct.objects[uuid]
             if uuid not in self.results.keys():
-                _type = -1
-                if point[1] < player.a[1]:
+                _type = 0
+                if player.area[1] <= point[1] <= player.area[1] + player.area[3]:
+                    _type = 0
+                if player.area[1] > point[1]:
                     _type = -1
-                else:
+                if player.area[1] + player.area[3] < point[1]:
                     _type = 1
                 self.results[uuid] = {
-                    'type': _type,
-                    'min': point[1],
-                    'max': point[1]
+                    'type': _type
                 }
             else:
-                if self.results[uuid]['min'] > point[1]:
-                    self.results[uuid]['min'] = point[1]
-                if self.results[uuid]['max'] < point[1]:
-                    self.results[uuid]['max'] = point[1]
-                if self.results[uuid]['min'] + 100 <= self.results[uuid]['max'] and self.results[uuid]['min'] < player.a[1] and self.results[uuid]['max'] > player.a[1]:
-                    mn = abs(self.results[uuid]['min'] - point[1])
-                    mx = abs(self.results[uuid]['max'] - point[1])
-                    if mn < mx:
-                        self.results[uuid]['type'] = -1
-                    else:
-                        self.results[uuid]['type'] = 1
-            _type = 'OUT' if self.results[uuid]['type'] == -1 else 'IN'
+                if player.area[1] <= point[1] <= player.area[1] + player.area[3]:
+                    if self.results[uuid]['type'] == -1:
+                        self.results[uuid]['type'] = 0
+                        self._in += 1
+                    if self.results[uuid]['type'] == 1:
+                        self.results[uuid]['type'] = 0
+                        self._out += 1
+                else:
+                    if self.results[uuid]['type'] == 0:
+                        if player.area[1] <= point[1] <= player.area[1] + player.area[3]:
+                            _type = 0
+                        if player.area[1] > point[1]:
+                            _type = -1
+                        if player.area[1] + player.area[3] < point[1]:
+                            _type = 1
+                        self.results[uuid]['type'] = _type
+
+            _type = 'OUT' if self.results[uuid]['type'] == -1 else (
+                'IN' if self.results[uuid]['type'] == 1 else 'SCN'
+            )
             cv.putText(
                 player.orginal, 
                 'ID: {}, {}'.format(uuid, _type), 
@@ -142,12 +148,8 @@ class Tracker:
                 (0, 255, 0), 
                 2
             )
-            if self.results[uuid]['type'] == -1:
-                self._out += 1
-            else:
-                self._in += 1
             cv.circle(player.orginal, (point[0], point[1]), 4, (0, 255, 0), -1)
         cv.rectangle(player.orginal, player.area, (0, 255, 0),2)
         cv.putText(player.orginal, 'IN : {}'.format(self._in), (100, 100), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-        cv.putText(player.orginal, 'OUT : {}'.format(self._out), (100, 130), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        #cv.putText(player.orginal, 'OUT : {}'.format(self._out), (100, 130), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         player.predictions = None

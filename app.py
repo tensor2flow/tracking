@@ -7,7 +7,7 @@ from models import (
 from player import VideoPlayer
 
 if __name__ == '__main__': 
-    player = VideoPlayer('Window', 'video/001.mp4', (600, 1700), (0, 500), (1100, 600), (0, 350, 1100, 100))
+    player = VideoPlayer('Window', 'video/003.mp4', (600, 1700), (0, 600), (1100, 700), (0, 400, 1100, 100))
     background = BackgroundDetection(hide=True)
     player.use(MotionDetection(hide=True))
     player.use(background)
