@@ -3,6 +3,7 @@ import numpy as np
 from time import time
 from scipy.spatial import distance as dist
 from collections import OrderedDict
+import settings
 
 class CentroidTracker():
 	def __init__(self):
@@ -91,7 +92,7 @@ class Tracker:
         if player.predictions is not None:
             self.trackers = {}
             for box in player.predictions:
-                self.trackers[self.lastID] = cv.TrackerCSRT_create()
+                self.trackers[self.lastID] = settings.Tracker()
                 self.trackers[self.lastID].init(player.orginal, (box[0], box[1], box[2] - box[0], box[3] - box[1]))
                 self.lastID += 1
             for box in player.predictions:
@@ -151,5 +152,4 @@ class Tracker:
             cv.circle(player.orginal, (point[0], point[1]), 4, (0, 255, 0), -1)
         cv.rectangle(player.orginal, player.area, (0, 255, 0),2)
         cv.putText(player.orginal, 'IN : {}'.format(self._in), (100, 100), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-        #cv.putText(player.orginal, 'OUT : {}'.format(self._out), (100, 130), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         player.predictions = None

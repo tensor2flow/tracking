@@ -1,11 +1,12 @@
-from keras_retinanet import models
-from keras_retinanet.utils.image import preprocess_image, resize_image
-from keras_retinanet.models.retinanet import retinanet_bbox
+from imagenet import models
+from imagenet.utils.image import preprocess_image, resize_image
+from imagenet.models.retinanet import retinanet_bbox
 import numpy as np
-from keras_retinanet.utils.visualization import draw_box, draw_caption
+from imagenet.utils.visualization import draw_box, draw_caption
 import cv2 as cv
 from keras import backend as K
 from time import time
+import settings
 
 K.clear_session()
 
@@ -30,17 +31,9 @@ class HeadDetection:
 
     def run(self, player, frame):
         if player.i % 25 == 0:
-            isprocessing = False
-            if player.boxes is not None:
-                for box in player.boxes:
-                    x1, y1, x2, y2 = box
-                    x1, y1, x2, y2 = player.scale * x1, player.scale * y1, player.scale * x2, player.scale * y2
-                    if player.a[0] < x1 < player.b[0] and player.a[0] < x2 < player.b[0] and player.a[1] > y1 and y2 > player.b[1]:
-                        isprocessing = True
-            if isprocessing and self.ispredict or self.ispredict and player.last_predicted + 25 < player.i:
-                start = time()
-                boxes = self.predict(player.orginal)
-                player.last_predicted = player.i
-                #print('performance:', time() - start)
-                player.predictions = boxes
+            start = time()
+            boxes = self.predict(player.orginal)
+            player.last_predicted = player.i
+            #print('performance:', time() - start)
+            player.predictions = boxes
         cv.rectangle(player.orginal, player.a, player.b, (255, 0, 0), 1)

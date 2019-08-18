@@ -17,7 +17,6 @@ class VideoPlayer:
         self.scale = 1.0
         self.stopped = False
         self.boxes = None
-        self.last_predicted = 0
         self.predictions = None
         self.events = [
             ( 'q', lambda player, frame: player.stop() )
