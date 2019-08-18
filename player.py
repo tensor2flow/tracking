@@ -12,7 +12,6 @@ class VideoPlayer:
         self.orginal = None
         self.video = cv.VideoCapture(path)
         self.models = []
-        self.windows = {}
         self.frame = None
         self.scale = 1.0
         self.stopped = False
@@ -22,6 +21,8 @@ class VideoPlayer:
             ( 'q', lambda player, frame: player.stop() )
         ]
         self.i = 0
+        self.queries = []
+        self.last_query = []
 
     def stop(self):
         self.stopped = True
@@ -48,8 +49,6 @@ class VideoPlayer:
             for model in self.models:
                 model.run(self, frame)
             cv.imshow(self.name, self.orginal)
-            for name in self.windows:
-                cv.imshow(name, self.windows[name])
             key = cv.waitKey(1)
             for code, action in self.events:
                 if key == ord(code):
