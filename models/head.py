@@ -11,9 +11,7 @@ import settings
 K.clear_session()
 
 class HeadDetection:
-    def __init__(self, path, baskbone='resnet50', hide=True, predict=True):
-        self.ispredict = predict
-        self.hide = hide
+    def __init__(self, path, baskbone='resnet50'):
         self.train_model = models.load_model(path, backbone_name=baskbone)
         self.prediction_model = retinanet_bbox(self.train_model, anchor_params=None)
 
@@ -28,12 +26,16 @@ class HeadDetection:
                 break
             results.append(np.int0(box))
         return np.array(results)
-
-    def run(self, player, frame):
-        if player.i % 25 == 0:
-            start = time()
-            boxes = self.predict(player.orginal)
-            player.last_predicted = player.i
-            #print('performance:', time() - start)
-            player.predictions = boxes
-        cv.rectangle(player.orginal, player.a, player.b, (255, 0, 0), 1)
+    
+    def predicts(self, images, scale):
+        results = []
+        boxes, scores, _ = self.prediction_model.predict_on_batch(np.array(images))
+        boxes /= scale
+        for i in range(len(images)):
+            result = []
+            for box, score in zip(boxes[i], scores[i]):
+                if score < 0.60:
+                    break
+                result.append(np.int0(box))
+            results.append(result)
+        return results
