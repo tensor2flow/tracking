@@ -54,8 +54,8 @@ class VideoPlayer:
         self.events.append(event)
 
     def run(self):
-        limit = 15
-        if len(self.queries) > limit * 2 * 20:
+        limit = 10
+        if len(self.queries) > limit * 2 * 30:
             st = time()
             prediction_frames = []
             groups = []
@@ -84,7 +84,7 @@ class VideoPlayer:
                     b = front_tracker.track(front[i])
                     predictions[limit + i] = (front[i], b)
                 self.frames.extend(predictions)
-            # print('performance:', time() - st)
+            #print('performance:', time() - st)
 
     def play(self):
         st = time()
@@ -92,7 +92,6 @@ class VideoPlayer:
             if self.stopped:
                 break
             check, frame = self.video.read()
-            # self.video.read()
             if frame is None:
                 break
             start = time()
